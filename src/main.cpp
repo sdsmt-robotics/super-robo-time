@@ -1,5 +1,5 @@
 /*
-Super Robo Time 2020 Robot Code
+Super Robo Time 2023 Robot Code
 
 Install the libraries listed below and add the esp32 board profiles from this link:
   https://dl.espressif.com/dl/package_esp32_index.json
@@ -34,6 +34,9 @@ This code has no copyright license, do whatever you want with it
 #include "kicker.h"
 #include "line.h"
 #include "srt-ultrasonic.h"
+
+// Write Frequency
+uint32_t writeFreq = 2000;
 
 //motor driver setup
 L289N rMotor(23, 22, 21, true);
@@ -74,8 +77,9 @@ void setup()
 {
   Serial.begin(115200);
   Dabble.begin("DEFAULT SRT ROBOT NAME"); //change the name inside the quotes, this will appear in your Bluetooth menu
+
+  analogWriteFrequency(writeFreq);
   
-  analogWriteFrequency(2000);
   lMotor.init();
   rMotor.init();
   line.init();
