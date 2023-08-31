@@ -131,6 +131,9 @@ void loop() {
    * to add more functions for the kicker
    */
   //Turn the kicker on
+
+  //kicker.kickerOff(); 
+
   if(GamePad.isSquarePressed())
   {
     kicker.kickerOn();
@@ -143,6 +146,7 @@ void loop() {
   
   float xRaw = GamePad.getXaxisData();
   float yRaw = GamePad.getYaxisData();
+
   float xBias = -abs(xRaw) / 7 + 1;
   int yMap = sqrt(pow(xRaw, 2) + pow(yRaw, 2));
   yMap = map(yMap, 0, 7, 0, 255);
@@ -159,10 +163,10 @@ void loop() {
   {
     lVel *= xBias;
   }
- 
+
   //set the motor speeds
-  lMotor.setSpeedDirection(lVel, true);
-  rMotor.setSpeedDirection(rVel, true);
+  lMotor.setSpeedDirection(lVel, false);
+  rMotor.setSpeedDirection(rVel, false);
 
   //handle blinking the ESP32's built-in LED
   if (millis() > prevTimeLED + BLINK_PERIOD)
