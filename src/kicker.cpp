@@ -1,20 +1,21 @@
 #include "kicker.h"
+#include "Arduino.h"
 
-SRTKicker::SRTKicker(int _pin)
+SRTKicker::SRTKicker(int _pin):_pin(_pin)
 {
-  //set up the WPM channel
-  ledcSetup(PWMChannel, PWMFreq, PWMResolution);
-  
-  //attach the channel and pin
-  ledcAttachPin(_pin, PWMChannel);
 }
 
 void SRTKicker::kickerOn()
 {
-    ledcWrite(PWMChannel, rotation);
+  analogWrite(_pin, 255);
 }
 
 void SRTKicker::kickerOff()
 {
-    ledcWrite(PWMChannel, 0);
+  analogWrite(_pin, 0);
+}
+
+void SRTKicker::init()
+{
+  pinMode(_pin, OUTPUT);
 }
