@@ -1,5 +1,5 @@
 /*
-Super Robo Time 2023 Robot Code
+Super Robo Time 2020 Robot Code
 
 Install the libraries listed below and add the esp32 board profiles from this link:
   https://dl.espressif.com/dl/package_esp32_index.json
@@ -25,27 +25,18 @@ This code has no copyright license, do whatever you want with it
 #include <L289N.h>       // https://github.com/sdsmt-robotics/L298N
 #include <batterySense.h>// https://github.com/sdsmt-robotics/srt2020-battery-sense
 #include <analogWrite.h> // https://github.com/ERROPiX/ESP32_AnalogWrite
-#include <Ultrasonic.h>  // https://github.com/JRodrigoTech/Ultrasonic-HC-SR04
-#include <FastLED.h>     // https://github.com/FastLED/FastLED
+     // https://github.com//
 #include <ESP32Servo.h>       // https://github.com/RoboticsBrno/ServoESP32
 
 #define LED_BUILTIN 2
 
 #include "kicker.h"
-#include "line.h"
-#include "srt-ultrasonic.h"
-
-// Write Frequency
-uint32_t writeFreq = 2000;
 
 //motor driver setup
 L289N rMotor(23, 22, 21, true);
 L289N lMotor(19, 18, 5,  true);
 int lVel, rVel;
 
-//ultrasonic distance sensor setup
-Ultrasonic ultrasonic(16, 17); //TRIG, ECHO
-SRTUltrasonic distance;
 
 //status LED!
 const int BLINK_PERIOD = 200; //ms between blinks
@@ -58,44 +49,24 @@ void stopRobot();
 const int calibrationBridgePin = 35;
 const int calibrationBridgePin2 = 32;
 
-//LED strip
-FASTLED_USING_NAMESPACE
-#define LED_TYPE WS2812B
-#define COLOR_ORDER GRB
-const int DATA_PIN = 15;
-const int NUM_LEDS = 8;
-const int BRIGHTNESS = 40;
-CRGB ledStrip[NUM_LEDS];
-
 //Kicker
 SRTKicker kicker(13);
 
 //infrared line sensor
-SRTLine line(A3);
 
 void setup()
 {
   Serial.begin(115200);
-  Dabble.begin("DEFAULT SRT ROBOT NAME"); //change the name inside the quotes, this will appear in your Bluetooth menu
-
-  analogWriteFrequency(writeFreq);
+  Dabble.begin("Dean M"); //change the name inside the quotes, this will appear in your Bluetooth menu
   
+  //analogWriteFrequency(2000);
   lMotor.init();
   rMotor.init();
-  line.init();
   battery.init();
-  distance.init(&ultrasonic);
+  kicker.init();
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(ledStrip, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.setBrightness(BRIGHTNESS);
-
-  for (int i = 0; i < NUM_LEDS; i++)
-  {
-    ledStrip[i] = CRGB::Green;
-  }
-  FastLED.show();
 
   //
   pinMode(calibrationBridgePin2, OUTPUT);
@@ -117,9 +88,6 @@ void loop() {
   }
 
   //sample the ultrasonic sensor, this needs to run very frequently
-  distance.sample();
-  
-  //do some math to figure out how to drive each motor
   Dabble.processInput();
 
   
@@ -131,42 +99,42 @@ void loop() {
    * to add more functions for the kicker
    */
   //Turn the kicker on
-
-  //kicker.kickerOff(); 
-
   if(GamePad.isSquarePressed())
   {
     kicker.kickerOn();
+    Serial.println("KickerOn");
   }
   //Turn the kicker off
   if (GamePad.isCrossPressed())
   {
-    kicker.kickerOff();    
+    kicker.kickerOff();   
+    Serial.println("kickerOff");
   }
   
+  /*
   float xRaw = GamePad.getXaxisData();
   float yRaw = GamePad.getYaxisData();
-
   float xBias = -abs(xRaw) / 7 + 1;
   int yMap = sqrt(pow(xRaw, 2) + pow(yRaw, 2));
   yMap = map(yMap, 0, 7, 0, 255);
-  if (yRaw < 0) yMap *= -1;
+  */
 
-  lVel = yMap;
-  rVel = yMap;
+  double Left = (GamePad.getYaxisData() + (GamePad.getXaxisData()));
+  double Right = (GamePad.getYaxisData() - (GamePad.getXaxisData()));
+  Left = map(Left, -7, 7, -254, 254);
+  Right = map(Right, -7, 7, -254, 254);
 
-  if (xRaw > 0)
+  if(abs(GamePad.getXaxisData()) > 0.1 || abs(GamePad.getYaxisData()) > 0.1)
   {
-    rVel *= xBias;
+    //set the motor speeds
+    lMotor.setSpeedDirection(Left, false);
+    rMotor.setSpeedDirection(Right, false);
   }
-  else if (xRaw < 0)
+  else
   {
-    lVel *= xBias;
+    lMotor.setSpeedDirection(0, false);
+    rMotor.setSpeedDirection(0, false);
   }
-
-  //set the motor speeds
-  lMotor.setSpeedDirection(lVel, false);
-  rMotor.setSpeedDirection(rVel, false);
 
   //handle blinking the ESP32's built-in LED
   if (millis() > prevTimeLED + BLINK_PERIOD)
@@ -176,6 +144,7 @@ void loop() {
     prevTimeLED = millis();
   }
 
+  static unsigned long printTime = millis();
 }
 
 void stopRobot()
@@ -183,35 +152,5 @@ void stopRobot()
   lMotor.setSpeedDirection(0);
   rMotor.setSpeedDirection(0);
 
-  //set whole LED strip to black
-  int i;
-  for (i = 0; i < NUM_LEDS; i++)
-  {
-    ledStrip[i] = CRGB::Black;
-  }
-  FastLED.show();
-
-  i = 0;
-  do
-  {
-    //light one LED red at a time, one after the other
-    ledStrip[i++] = CRGB::Black;
-    if (i >= NUM_LEDS)
-    {
-      i = 0;
-    }
-    ledStrip[i] = CRGB::Red;
-    FastLED.show();
-
-    //two short pulses on the onboard LED
-    digitalWrite(LED_BUILTIN, 1);
-    delay(200);
-    digitalWrite(LED_BUILTIN, 0);
-    delay(100);
-    digitalWrite(LED_BUILTIN, 1);
-    delay(200);
-    digitalWrite(LED_BUILTIN, 0);
-    delay(2000);
-    Serial.println(battery.getRollingAverage());
-  } while (true);
 }
+ 
