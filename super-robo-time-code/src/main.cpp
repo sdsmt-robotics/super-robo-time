@@ -24,9 +24,8 @@ This code has no copyright license, do whatever you want with it
 #include <DabbleESP32.h> // https://github.com/STEMpedia/DabbleESP32
 #include <L289N.h>       // https://github.com/sdsmt-robotics/L298N
 #include <batterySense.h>// https://github.com/sdsmt-robotics/srt2020-battery-sense
-#include <analogWrite.h> // https://github.com/ERROPiX/ESP32_AnalogWrite
-     // https://github.com//
-#include <ESP32Servo.h>       // https://github.com/RoboticsBrno/ServoESP32
+#include <pwmWrite.h>    // https://github.com/Dlloydev/ESP32-ESP32S2-AnalogWrite
+#include <ESP32Servo.h>  // https://github.com/RoboticsBrno/ServoESP32
 
 #define LED_BUILTIN 2
 
@@ -57,7 +56,7 @@ SRTKicker kicker(13);
 void setup()
 {
   Serial.begin(115200);
-  Dabble.begin("Dean M"); //change the name inside the quotes, this will appear in your Bluetooth menu
+  Dabble.begin("Chris B"); //change the name inside the quotes, this will appear in your Bluetooth menu
   
   //analogWriteFrequency(2000);
   lMotor.init();
